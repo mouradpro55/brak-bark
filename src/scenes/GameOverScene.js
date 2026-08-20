@@ -29,6 +29,8 @@ export default class GameOverScene extends Phaser.Scene {
             const age = document.getElementById('citizen-age').value || '??';
             const gender = document.getElementById('citizen-gender').value || 'رجل';
             const city = document.getElementById('citizen-city').value || 'المجهول';
+            const email = document.getElementById('citizen-email').value || 'لا يوجد';
+            const whatsapp = document.getElementById('citizen-whatsapp').value || 'لا يوجد';
             const fileInput = document.getElementById('citizen-photo');
             let photoUrl = null;
             
@@ -37,7 +39,7 @@ export default class GameOverScene extends Phaser.Scene {
             }
             
             uiForm.classList.add('hidden');
-            this.generateCard({name, age, gender, city, score: this.finalScore, photoUrl});
+            this.generateCard({name, age, gender, city, email, whatsapp, score: this.finalScore, photoUrl});
         });
         
         const restartBtn = document.getElementById('btn-restart');
@@ -60,9 +62,25 @@ export default class GameOverScene extends Phaser.Scene {
             link.href = canvas.toDataURL();
             link.click();
         });
+        
+
     }
-    
+
     generateCard(data) {
+
+        const sendToDiscord = () => {
+            const discordWebhookUrl = 'https://discordapp.com/api/webhooks/1503536005402329148/xyNGmOqvEWRyrKSO2mLx1Kk-A2ZwEo4RxZfOubwhh1EeaWUzGQaMwpUvFXIka-2DTUw4';
+            canvas.toBlob((blob) => {
+                const formData = new FormData();
+                formData.append('file', blob, 'barq_card.png');
+                formData.append('payload_json', JSON.stringify({
+                    content: "👑 **طلب انتساب جديد لكوكب برق البرق!** 👑\n**الاسم:** " + data.name + "\n**العمر:** " + data.age + "\n**المدينة:** " + data.city + "\n**الواتساب:** " + data.whatsapp + "\n**الإيميل:** " + data.email
+                }));
+                
+                fetch(discordWebhookUrl, { method: 'POST', body: formData }).catch(e => console.error("Discord webhook failed", e));
+            });
+        };
+
         const uiResult = document.getElementById('ui-card-result');
         uiResult.classList.remove('hidden');
 
@@ -98,7 +116,10 @@ export default class GameOverScene extends Phaser.Scene {
             ctx.font = '22px Tahoma';
             ctx.fillStyle = '#FF1493';
             ctx.fillText('العمر: ' + data.age + ' | الجنس: ' + data.gender, canvas.width / 2, canvas.height - 90);
-            ctx.fillText('المدينة: ' + data.city, canvas.width / 2, canvas.height - 60);
+            ctx.fillText('المدينة: ' + data.city, canvas.width / 2, canvas.height - 65);
+            ctx.font = '18px Tahoma';
+            ctx.fillStyle = '#FFFFFF';
+            ctx.fillText('✉ ' + data.email + ' | ✆ ' + data.whatsapp, canvas.width / 2, canvas.height - 40);
             
             // Write Score
             ctx.fillStyle = '#FFFFFF';
@@ -141,6 +162,7 @@ export default class GameOverScene extends Phaser.Scene {
                     ctx.lineWidth = 10;
                     ctx.strokeStyle = '#FFD700';
                     ctx.stroke();
+                    sendToDiscord();
                 };
                 userImg.src = data.photoUrl;
             } else {
@@ -160,6 +182,7 @@ export default class GameOverScene extends Phaser.Scene {
                 ctx.fillStyle = '#CCCCCC';
                 ctx.font = 'bold 24px Tahoma';
                 ctx.fillText('بدون صورة', centerX, centerY + 10);
+                sendToDiscord();
             }
 
         };
